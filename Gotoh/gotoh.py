@@ -1,5 +1,4 @@
 
-
 def score_of_alignment(align_seq1, align_seq2, cost_gap_open, 
                        cost_gap_extension, substitutions=None):
     """
