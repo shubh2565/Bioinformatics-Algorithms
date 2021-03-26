@@ -152,3 +152,83 @@ def init_matrix_q(seq_1, seq_2):
         matrix_q[j][0] = -float('Inf')
         
     return matrix_q
+    
+    
+def visualize_matrix(matrix):
+    """
+    Implement the visualization of a matrix.
+    Can be used for self check
+    """
+    for i in range(len(matrix)):
+        print(*matrix[i], sep='\t')
+        
+
+def complete_d_p_q_computation(seq_1, seq_2, cost_gap_open, cost_gap_extend, substitutions=None):
+    """
+    Implement the recursive computation of matrices D, P and Q
+    """
+    matrix_d = init_matrix_d(seq_1, seq_2, cost_gap_open, cost_gap_extend)
+    matrix_p = init_matrix_p(seq_1, seq_2)
+    matrix_q = init_matrix_q(seq_1, seq_2)
+    
+    if substitutions == None:
+        for i in range(1,len(seq_1)+1):
+            for j in range(1,len(seq_2)+1):
+                matrix_p[i][j] = max(matrix_d[i-1][j] + cost_gap_open + cost_gap_extend,
+                                    matrix_p[i-1][j] + cost_gap_extend)
+                matrix_q[i][j] = max(matrix_d[i][j-1] + cost_gap_open + cost_gap_extend,
+                                    matrix_q[i][j-1] + cost_gap_extend)
+                if seq_1[i-1] == seq_2[j-1]:
+                    matrix_d[i][j] = max(matrix_d[i-1][j-1] + 1, matrix_p[i][j], matrix_q[i][j])
+                else:
+                    matrix_d[i][j] = max(matrix_d[i-1][j-1] - 1, matrix_p[i][j], matrix_q[i][j])
+                    
+    else:
+        for i in range(1,len(seq_1)+1):
+            for j in range(1,len(seq_2)+1):
+                matrix_p[i][j] = max(matrix_d[i-1][j] + cost_gap_open + cost_gap_extend,
+                                    matrix_p[i-1][j] + cost_gap_extend)
+                matrix_q[i][j] = max(matrix_d[i][j-1] + cost_gap_open + cost_gap_extend,
+                                    matrix_q[i][j-1] + cost_gap_extend)
+                matrix_d[i][j] = max(matrix_d[i-1][j-1] + substitutions[(seq_1[i-1], seq_2[j-1])],
+                                     matrix_p[i][j], matrix_q[i][j])
+                
+    return matrix_d, matrix_p, matrix_q
+               
+ 
+def alignment(traceback_path, seq1, seq2):
+    """
+    Implement creation of the alignment with given traceback path and sequences1 and 2
+    """
+    alignment_seq1 = ''
+    alignment_seq2 = ''
+    j = 0
+    k = 0
+    i = len(traceback_path)-2
+    
+    while i > -1:
+        if traceback_path[i][1] == 'd':
+            #print('d')
+            alignment_seq1 += seq1[j]
+            alignment_seq2 += seq2[k]
+            j += 1
+            k += 1
+            i -= 1
+        elif traceback_path[i][1] == 'p':
+            #print('p')
+            alignment_seq1 += seq1[j]
+            alignment_seq2 += '-'
+            j += 1
+            i -= 1
+            if traceback_path[i][1] == 'd':
+                i -= 1
+        else:
+            #print('q')
+            alignment_seq1 += '-'
+            alignment_seq2 += seq2[k]
+            k += 1
+            i -= 1
+            if traceback_path[i][1] == 'd':
+                i -= 1
+    
+    return alignment_seq1, alignment_seq2        
