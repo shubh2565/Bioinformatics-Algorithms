@@ -194,7 +194,93 @@ def complete_d_p_q_computation(seq_1, seq_2, cost_gap_open, cost_gap_extend, sub
                                      matrix_p[i][j], matrix_q[i][j])
                 
     return matrix_d, matrix_p, matrix_q
-               
+
+
+"""
+You are working with 3 matrices simultaneously.
+You can store your path as a list of cells.
+A cell can be a tuple: coordinates, matrix_name.
+And coordinates is a tuple of indexex i, j.
+
+Cell example: ((0, 2), "d")
+Path example: [((2, 4), 'd'), ((2, 4), 'q'), ((2, 3), 'q'), ((2, 2), 'd'), ((1, 1), 'd'), ((0, 0), 'd')]
+
+"""
+
+def compute_all_tracebacks(seq1, seq2, d_matrix, p_matrix, q_matrix,
+                           cost_gap_open, cost_gap_extend, substitution=None):
+    """
+    Implement a search for all possible paths from the bottom right corner to the top left.
+    Implement 'find_all_previous' and check_complete first.
+   
+    """
+    
+    all_paths = [[((len(seq1),len(seq2)), 'd')]]
+    check_path = False
+    i = 0
+    
+    while i < len(all_paths):
+        while(check_path ==  check_complete(all_paths[i])):
+            cells = find_all_previous(all_paths[i][-1], seq1, seq2, d_matrix, p_matrix, q_matrix,
+                                      cost_gap_open, cost_gap_extend, substitution)
+            
+            if len(cells) == 1:
+                all_paths[i].append(cells[0])
+            else:
+                for j in range(len(cells)-1):
+                    all_paths.append(all_paths[i][:])
+                    all_paths[-1].append(cells[j+1])
+                all_paths[i].append(cells[0])
+        
+        i += 1
+            
+    return all_paths
+    
+def find_all_previous(cell, seq1, seq2, d_matrix, p_matrix, q_matrix,
+                   cost_gap_open, cost_gap_extend, substitution=None):
+    parent_cells = []
+    """
+    Implement a search for all possible previous cells.
+    """
+    if cell[1] == 'p':
+        if p_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]] + cost_gap_open + cost_gap_extend:
+            parent_cells.append(((cell[0][0]-1, cell[0][1]), 'd'))
+        if p_matrix[cell[0][0]][cell[0][1]] == p_matrix[cell[0][0]-1][cell[0][1]] + cost_gap_extend:
+            parent_cells.append(((cell[0][0]-1, cell[0][1]), 'p'))
+    elif cell[1] == 'q':
+        if q_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]][cell[0][1]-1] + cost_gap_open + cost_gap_extend:
+            parent_cells.append(((cell[0][0], cell[0][1]-1), 'd'))
+        if q_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]-1] + cost_gap_extend:
+            parent_cells.append(((cell[0][0], cell[0][1]-1), 'q'))
+    else:
+        if d_matrix[cell[0][0]][cell[0][1]] == p_matrix[cell[0][0]][cell[0][1]]:
+            parent_cells.append(((cell[0][0], cell[0][1]), 'p'))
+        if d_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]]:
+            parent_cells.append(((cell[0][0], cell[0][1]), 'q'))
+        if substitution == None:
+            if seq1[cell[0][0]-1] == seq2[cell[0][1]-1]:
+                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + 1:
+                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
+            else:
+                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] - 1:
+                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
+        else:
+            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + substitution[(seq1[cell[0][0]-1], seq2[cell[0][1]-1])]:
+                parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
+        
+            
+    return parent_cells
+
+def check_complete(path):
+    """
+    Implement a function which checks if the traceback path is complete.
+    """
+    if path[-1][0]== (0,0):
+        return True
+    else:
+        return False
+        
+              
  
 def alignment(traceback_path, seq1, seq2):
     """
@@ -231,4 +317,6 @@ def alignment(traceback_path, seq1, seq2):
             if traceback_path[i][1] == 'd':
                 i -= 1
     
-    return alignment_seq1, alignment_seq2        
+    return alignment_seq1, alignment_seq2
+    
+          
