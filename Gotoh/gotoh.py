@@ -237,7 +237,7 @@ def compute_all_tracebacks(seq1, seq2, d_matrix, p_matrix, q_matrix,
     return all_paths
     
 def find_all_previous(cell, seq1, seq2, d_matrix, p_matrix, q_matrix,
-                   cost_gap_open, cost_gap_extend, substitution=None):
+                   cost_gap_open, cost_gap_extend):
     parent_cells = []
     """
     Implement a search for all possible previous cells.
@@ -253,21 +253,22 @@ def find_all_previous(cell, seq1, seq2, d_matrix, p_matrix, q_matrix,
         if q_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]-1] + cost_gap_extend:
             parent_cells.append(((cell[0][0], cell[0][1]-1), 'q'))
     else:
+        if cell[0][0] == 0:
+            parent_cells.append(((cell[0][0], cell[0][1]-1), 'd'))
+            return parent_cells
+        if cell[0][1] == 0:
+            parent_cells.append(((cell[0][0]-1, cell[0][1]), 'd'))
+            return parent_cells
         if d_matrix[cell[0][0]][cell[0][1]] == p_matrix[cell[0][0]][cell[0][1]]:
             parent_cells.append(((cell[0][0], cell[0][1]), 'p'))
         if d_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]]:
             parent_cells.append(((cell[0][0], cell[0][1]), 'q'))
-        if substitution == None:
-            if seq1[cell[0][0]-1] == seq2[cell[0][1]-1]:
-                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + 1:
-                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
-            else:
-                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] - 1:
-                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
-        else:
-            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + substitution[(seq1[cell[0][0]-1], seq2[cell[0][1]-1])]:
+        if seq1[cell[0][0]-1] == seq2[cell[0][1]-1]:
+            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + 1:
                 parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
-        
+        else:
+            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] - 1:
+                parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
             
     return parent_cells
 
@@ -293,7 +294,17 @@ def alignment(traceback_path, seq1, seq2):
     i = len(traceback_path)-2
     
     while i > -1:
-        if traceback_path[i][1] == 'd':
+        if traceback_path[i][1] == 'd' and traceback_path[i][0][0] == 0:
+            alignment_seq1 += '-'
+            alignment_seq2 += seq2[k]
+            k += 1
+            i -= 1
+        elif traceback_path[i][1] == 'd' and traceback_path[i][0][1] == 0:
+            alignment_seq1 += seq1[j]
+            alignment_seq2 += '-'
+            j += 1
+            i -= 1
+        elif traceback_path[i][1] == 'd':
             #print('d')
             alignment_seq1 += seq1[j]
             alignment_seq2 += seq2[k]
@@ -316,7 +327,6 @@ def alignment(traceback_path, seq1, seq2):
             i -= 1
             if traceback_path[i][1] == 'd':
                 i -= 1
-    
     return alignment_seq1, alignment_seq2
     
           
