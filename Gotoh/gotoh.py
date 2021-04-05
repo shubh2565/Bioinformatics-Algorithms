@@ -1,3 +1,28 @@
+def gotoh(fasta_file_1, fasta_file_2, cost_gap_open, file_substitution_matrix=None):
+    alignments = []
+    
+    seq1 = read_fasta_file(fasta_file_1)
+    seq2 = read_fasta_file(fasta_file_2)
+    gap_extension = -1
+    if file_substitution_matrix != None:
+        score = read_substitution_matrix(file_substitution_matrix)
+        d_matrix, p_matrix, q_matrix = complete_d_p_q_computation(seq1, seq2, cost_gap_open, gap_extension, score)
+        tracebacks = compute_all_tracebacks(seq1, seq2, d_matrix, p_matrix, q_matrix, cost_gap_open, gap_extension, score)
+        for traceback_path in tracebacks:
+            alignment_seq1, alignment_seq2 = alignment(traceback_path, seq1, seq2)
+            alignments.append((alignment_seq1, alignment_seq2))
+        alignment_score = score_of_alignment(alignments[0][0], alignments[0][1], cost_gap_open, gap_extension, score)
+        
+    else:
+        d_matrix, p_matrix, q_matrix = complete_d_p_q_computation(seq1, seq2, cost_gap_open, gap_extension)
+        tracebacks = compute_all_tracebacks(seq1, seq2, d_matrix, p_matrix, q_matrix, cost_gap_open, gap_extension)
+        for traceback_path in tracebacks:
+            alignment_seq1, alignment_seq2 = alignment(traceback_path, seq1, seq2)
+            alignments.append((alignment_seq1, alignment_seq2))
+        alignment_score = score_of_alignment(alignments[0][0], alignments[0][1], cost_gap_open, gap_extension)
+    
+    return alignment_score, alignments
+
 
 def score_of_alignment(align_seq1, align_seq2, cost_gap_open, 
                        cost_gap_extension, substitutions=None):
@@ -237,7 +262,7 @@ def compute_all_tracebacks(seq1, seq2, d_matrix, p_matrix, q_matrix,
     return all_paths
     
 def find_all_previous(cell, seq1, seq2, d_matrix, p_matrix, q_matrix,
-                   cost_gap_open, cost_gap_extend):
+                   cost_gap_open, cost_gap_extend, substitution=None):
     parent_cells = []
     """
     Implement a search for all possible previous cells.
@@ -253,24 +278,23 @@ def find_all_previous(cell, seq1, seq2, d_matrix, p_matrix, q_matrix,
         if q_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]-1] + cost_gap_extend:
             parent_cells.append(((cell[0][0], cell[0][1]-1), 'q'))
     else:
-        if cell[0][0] == 0:
-            parent_cells.append(((cell[0][0], cell[0][1]-1), 'd'))
-            return parent_cells
-        if cell[0][1] == 0:
-            parent_cells.append(((cell[0][0]-1, cell[0][1]), 'd'))
-            return parent_cells
         if d_matrix[cell[0][0]][cell[0][1]] == p_matrix[cell[0][0]][cell[0][1]]:
             parent_cells.append(((cell[0][0], cell[0][1]), 'p'))
         if d_matrix[cell[0][0]][cell[0][1]] == q_matrix[cell[0][0]][cell[0][1]]:
             parent_cells.append(((cell[0][0], cell[0][1]), 'q'))
-        if seq1[cell[0][0]-1] == seq2[cell[0][1]-1]:
-            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + 1:
-                parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
+        if substitution == None:
+            if seq1[cell[0][0]-1] == seq2[cell[0][1]-1]:
+                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + 1:
+                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
+            else:
+                if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] - 1:
+                    parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
         else:
-            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] - 1:
+            if d_matrix[cell[0][0]][cell[0][1]] == d_matrix[cell[0][0]-1][cell[0][1]-1] + substitution[(seq1[cell[0][0]-1], seq2[cell[0][1]-1])]:
                 parent_cells.append(((cell[0][0]-1, cell[0][1]-1), 'd'))
             
     return parent_cells
+
 
 def check_complete(path):
     """
