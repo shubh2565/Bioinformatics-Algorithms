@@ -306,6 +306,7 @@ def check_complete(path):
         return False
         
               
+ 
 def alignment(traceback_path, seq1, seq2):
     """
     Implement creation of the alignment with given traceback path and sequences1 and 2
