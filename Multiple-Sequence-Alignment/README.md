@@ -1,0 +1,5 @@
+# Multiple Sequence Alignment
+
+Multiple sequence alignment (MSA) may refer to the process or the result of sequence alignment of three or more biological sequences, generally protein, DNA, or RNA. _Source:_ [Wikipedia](https://en.wikipedia.org/wiki/Multiple_sequence_alignment)
+
+The most widely used approach to multiple sequence alignments uses a heuristic search known as progressive technique (also known as the hierarchical or tree method) developed by [Da-Fei Feng and Doolittle](https://link.springer.com/article/10.1007/BF02603120) in 1987. Progressive alignment builds up a final MSA by combining pairwise alignments beginning with the most similar pair and progressing to the most distantly related. All progressive alignment methods require two stages: a first stage in which the relationships between the sequences are represented as a tree, called a guide tree, and a second step in which the MSA is built by adding the sequences sequentially to the growing MSA according to the guide tree.
